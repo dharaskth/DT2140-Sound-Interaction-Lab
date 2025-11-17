@@ -11,6 +11,8 @@ let dspNode = null;
 let dspNodeParams = null;
 let jsonParams = null;
 
+let hasTriggeredOnTilt = false;
+const ROTX_THRESHOLD = 20; // degrees
 // Change here to ("tuono") depending on your wasm file name
 const dspName = "bubble";
 const instance = new FaustWasm2ScriptProcessor(dspName);
@@ -57,12 +59,22 @@ function accelerationChange(accx, accy, accz) {
 }
 
 function rotationChange(rotx, roty, rotz) {
-    // Example: map accx to volume
-    const [min, max] = getMinMaxParam("/bubble/volume");
-    const v = map(rotx, -10, 10, min, max); // p5.js style mapping
-    dspNode.setParamValue("/bubble/volume", v);
-    // Use this for debugging from the desktop!
-    playAudio()
+    // rotx is the rotation around the X axis in degrees
+
+    if (!dspNode || audioContext.state === 'suspended') {
+        return;
+    }
+
+    // If rotated beyond 20° and we haven't fired yet -> play bubble
+    if (rotx > ROTX_THRESHOLD && !hasTriggeredOnTilt) {
+        playAudio();
+        hasTriggeredOnTilt = true;   // avoid repeating while still > 20°
+    }
+
+    // When we come back below the threshold, reset so it can trigger again
+    if (rotx <= ROTX_THRESHOLD) {
+        hasTriggeredOnTilt = false;
+    }    
 }
 
 function mousePressed() {
