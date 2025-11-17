@@ -53,14 +53,20 @@ bubble.createDSP(audioContext, 1024)
 
 function accelerationChange(accx, accy, accz) {
     // playAudio()
+
 }
 
 function rotationChange(rotx, roty, rotz) {
 }
 
 function mousePressed() {
-    playAudio()
+    
+    // Example: map accx to volume
+    const [min, max] = getMinMaxParam("/bubble/volume");
+    const v = map(accx, -10, 10, min, max); // p5.js style mapping
+    dspNode.setParamValue("/bubble/volume", v);
     // Use this for debugging from the desktop!
+    playAudio()
 }
 
 function deviceMoved() {
@@ -106,8 +112,8 @@ function playAudio() {
     // them printed on the console of your browser when you load the page)
     // For example if you change to a bell sound, here you could use "/churchBell/gate" instead of
     // "/thunder/rumble".
-    dspNode.setParamValue("/thunder/rumble", 1)
-    setTimeout(() => { dspNode.setParamValue("/thunder/rumble", 0) }, 100);
+    dspNode.setParamValue("/bubble", 1)
+    setTimeout(() => { dspNode.setParamValue("/bubbles", 0) }, 100);
 }
 
 //==========================================================================================
