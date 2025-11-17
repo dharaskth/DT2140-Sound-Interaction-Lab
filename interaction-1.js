@@ -78,13 +78,7 @@ function rotationChange(rotx, roty, rotz) {
 }
 
 function mousePressed() {
-    
-    // Example: map accx to volume
-    const [min, max] = getMinMaxParam("/bubble/volume");
-    const v = map(accx, -10, 10, min, max); // p5.js style mapping
-    dspNode.setParamValue("/bubble/volume", v);
-    // Use this for debugging from the desktop!
-    playAudio()
+    //playAudio()
 }
 
 function deviceMoved() {
