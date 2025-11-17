@@ -12,7 +12,7 @@ let dspNodeParams = null;
 let jsonParams = null;
 
 // Change here to ("tuono") depending on your wasm file name
-const dspName = "bells";
+const dspName = "runningwater";
 const instance = new FaustWasm2ScriptProcessor(dspName);
 
 // output to window or npm package module
@@ -56,6 +56,12 @@ function accelerationChange(accx, accy, accz) {
 }
 
 function rotationChange(rotx, roty, rotz) {
+    // Example: map accx to volume
+    const [min, max] = getMinMaxParam("/bubble/volume");
+    const v = map(rotx, -10, 10, min, max); // p5.js style mapping
+    dspNode.setParamValue("/bubble/volume", v);
+    // Use this for debugging from the desktop!
+    playAudio()
 }
 
 function mousePressed() {
@@ -102,8 +108,8 @@ function playAudio() {
     if (audioContext.state === 'suspended') {
         return;
     }
-    dspNode.setParamValue("/englishBell/gate", 1)
-    setTimeout(() => { dspNode.setParamValue("/englishBell/gate", 0) }, 100);
+    dspNode.setParamValue("/runningwater", 1)
+    setTimeout(() => { dspNode.setParamValue("/runningwater", 0) }, 100);
 }
 
 //==========================================================================================
