@@ -10,9 +10,11 @@
 let dspNode = null;
 let dspNodeParams = null;
 let jsonParams = null;
+let hasDropped = false;
+const ACCEL_Z_THRESHOLD = -20;
 
 // Change here to ("tuono") depending on your wasm file name
-const dspName = "brass";
+const dspName = "drop";
 const instance = new FaustWasm2ScriptProcessor(dspName);
 
 // output to window or npm package module
@@ -25,7 +27,7 @@ if (typeof module === "undefined") {
 }
 
 // The name should be the same as the WASM file, so change tuono with brass if you use brass.wasm
-brass.createDSP(audioContext, 1024)
+drop.createDSP(audioContext, 1024)
     .then(node => {
         dspNode = node;
         dspNode.connect(audioContext.destination);
@@ -53,6 +55,21 @@ brass.createDSP(audioContext, 1024)
 
 function accelerationChange(accx, accy, accz) {
     // playAudio()
+    if (!dspNode || audioContext.state === "suspended") return;
+
+    // Detect downward acceleration
+    if (accz < ACCEL_Z_THRESHOLD && !hasDropped) {
+        // Play drop sound (CHANGE THE PARAMETER TO YOUR REAL DSP ADDRESS)
+        dspNode.setParamValue("/drop/gate", 1);
+        setTimeout(() => dspNode.setParamValue("/drop/gate", 0), 120);
+
+        hasDropped = true;  // prevent repeats while still below threshold
+    }
+
+    // Reset trigger when returning above threshold
+    if (accz >= ACCEL_Z_THRESHOLD) {
+        hasDropped = false;
+    }
 }
 
 function rotationChange(rotx, roty, rotz) {
@@ -103,7 +120,7 @@ function playAudio(pressure) {
         return;
     }
     console.log(pressure)
-    dspNode.setParamValue("/brass/blower/pressure", pressure)
+    dspNode.setParamValue("/drop/gate", pressure)
 }
 
 //==========================================================================================

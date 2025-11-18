@@ -1,18 +1,12 @@
 //==========================================================================================
 // AUDIO SETUP
-//------------------------------------------------------------------------------------------
-//
-//------------------------------------------------------------------------------------------
-// Edit just where you're asked to!
-//------------------------------------------------------------------------------------------
-//
 //==========================================================================================
 let dspNode = null;
 let dspNodeParams = null;
 let jsonParams = null;
 
-// Change here to ("tuono") depending on your wasm file name
-const dspName = "runningwater";
+// Change this to match your WASM file name (bubble.wasm)
+const dspName = "bubble";
 const instance = new FaustWasm2ScriptProcessor(dspName);
 
 // output to window or npm package module
@@ -24,49 +18,59 @@ if (typeof module === "undefined") {
     module.exports = exp;
 }
 
-// The name should be the same as the WASM file, so change tuono with brass if you use brass.wasm
-bells.createDSP(audioContext, 1024)
+// Create the DSP node from the bubble WASM
+bubble.createDSP(audioContext, 1024)
     .then(node => {
         dspNode = node;
         dspNode.connect(audioContext.destination);
-        console.log('params: ', dspNode.getParams());
+        console.log("params: ", dspNode.getParams());
         const jsonString = dspNode.getJSON();
         jsonParams = JSON.parse(jsonString)["ui"][0]["items"];
-        dspNodeParams = jsonParams
-        // const exampleMinMaxParam = findByAddress(dspNodeParams, "/thunder/rumble");
-        // // ALWAYS PAY ATTENTION TO MIN AND MAX, ELSE YOU MAY GET REALLY HIGH VOLUMES FROM YOUR SPEAKERS
-        // const [exampleMinValue, exampleMaxValue] = getParamMinMax(exampleMinMaxParam);
-        // console.log('Min value:', exampleMinValue, 'Max value:', exampleMaxValue);
+        dspNodeParams = jsonParams;
     });
-
 
 //==========================================================================================
 // INTERACTIONS
-//------------------------------------------------------------------------------------------
-//
-//------------------------------------------------------------------------------------------
-// Edit the next functions to create interactions
-// Decide which parameters you're using and then use playAudio to play the Audio
-//------------------------------------------------------------------------------------------
-//
 //==========================================================================================
 
+// flags so we only trigger once when crossing 90°
+let hasTriggeredX = false;
+let hasTriggeredY = false;
+const ROT_THRESHOLD = 90; // degrees
+
 function accelerationChange(accx, accy, accz) {
-    // playAudio()
+    // optional: use acceleration if you want more interactions
 }
 
 function rotationChange(rotx, roty, rotz) {
-    // Example: map accx to volume
-    const [min, max] = getMinMaxParam("/bubble/volume");
-    const v = map(rotx, -10, 10, min, max); // p5.js style mapping
-    dspNode.setParamValue("/bubble/volume", v);
-    // Use this for debugging from the desktop!
-    playAudio()
+    if (!dspNode || audioContext.state === "suspended") return;
+
+    // ---- X axis ----
+    if (Math.abs(rotx) > ROT_THRESHOLD && !hasTriggeredX) {
+        playAudio();       // bubble sound
+        hasTriggeredX = true;
+    }
+    if (Math.abs(rotx) <= ROT_THRESHOLD) {
+        hasTriggeredX = false;
+    }
+
+    // ---- Y axis ----
+    if (Math.abs(roty) > ROT_THRESHOLD && !hasTriggeredY) {
+        playAudio();       // bubble sound
+        hasTriggeredY = true;
+    }
+    if (Math.abs(roty) <= ROT_THRESHOLD) {
+        hasTriggeredY = false;
+    }
 }
 
 function mousePressed() {
-    // playAudio()
-    // Use this for debugging from the desktop!
+    // useful to wake up audio on first click
+    if (audioContext.state === "suspended") {
+        audioContext.resume();
+    }
+    // optional test:
+    // playAudio();
 }
 
 function deviceMoved() {
@@ -77,39 +81,35 @@ function deviceMoved() {
 function deviceTurned() {
     threshVals[1] = turnAxis;
 }
+
 function deviceShaken() {
     shaketimer = millis();
     statusLabels[0].style("color", "pink");
-    playAudio();
+    // optional: also trigger sound on shake
+    // playAudio();
 }
 
 function getMinMaxParam(address) {
     const exampleMinMaxParam = findByAddress(dspNodeParams, address);
-    // ALWAYS PAY ATTENTION TO MIN AND MAX, ELSE YOU MAY GET REALLY HIGH VOLUMES FROM YOUR SPEAKERS
     const [exampleMinValue, exampleMaxValue] = getParamMinMax(exampleMinMaxParam);
-    console.log('Min value:', exampleMinValue, 'Max value:', exampleMaxValue);
-    return [exampleMinValue, exampleMaxValue]
+    console.log("Min value:", exampleMinValue, "Max value:", exampleMaxValue);
+    return [exampleMinValue, exampleMaxValue];
 }
 
 //==========================================================================================
 // AUDIO INTERACTION
-//------------------------------------------------------------------------------------------
-//
-//------------------------------------------------------------------------------------------
-// Edit here to define your audio controls 
-//------------------------------------------------------------------------------------------
-//
 //==========================================================================================
 
 function playAudio() {
-    if (!dspNode) {
-        return;
-    }
-    if (audioContext.state === 'suspended') {
-        return;
-    }
-    dspNode.setParamValue("/runningwater", 1)
-    setTimeout(() => { dspNode.setParamValue("/runningwater", 0) }, 100);
+    if (!dspNode) return;
+    if (audioContext.state === "suspended") return;
+
+    // CHANGE THIS ADDRESS to match the gate/trigger of your bubble patch
+    // Check console output from dspNode.getParams() to find the right one.
+    dspNode.setParamValue("/bubble/gate", 1);
+    setTimeout(() => {
+        dspNode.setParamValue("/bubble/gate", 0);
+    }, 100);
 }
 
 //==========================================================================================
