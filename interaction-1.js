@@ -14,7 +14,7 @@ let jsonParams = null;
 let hasTriggeredOnTilt = false;
 const ROTX_THRESHOLD = 20; // degrees
 // Change here to ("tuono") depending on your wasm file name
-const dspName = "bubble";
+const dspName = "runningwater";
 const instance = new FaustWasm2ScriptProcessor(dspName);
 
 // output to window or npm package module
@@ -27,7 +27,7 @@ if (typeof module === "undefined") {
 }
 
 // The name should be the same as the WASM file, so change tuono with brass if you use brass.wasm
-bubble.createDSP(audioContext, 1024)
+runningwater.createDSP(audioContext, 1024)
     .then(node => {
         dspNode = node;
         dspNode.connect(audioContext.destination);
@@ -65,7 +65,7 @@ function rotationChange(rotx, roty, rotz) {
         return;
     }
 
-    // If rotated beyond 20° and we haven't fired yet -> play bubble
+    // If rotated beyond 20° and we haven't fired yet -> play runningwater
     if (rotx > ROTX_THRESHOLD && !hasTriggeredOnTilt) {
         playAudio();
         hasTriggeredOnTilt = true;   // avoid repeating while still > 20°
@@ -92,9 +92,9 @@ function deviceTurned() {
 function deviceShaken() {
     shaketimer = millis();
     statusLabels[0].style("color", "pink");
-    dspNode.setParamValue("/bubble/gate", pitchValue);
-    dspNode.setParamValue("/bubble/gate", 1);
-    setTimeout(() => dspNode.setParamValue("/bubble/gate", 0), duration);   
+    dspNode.setParamValue("/runningwater/gate", pitchValue);
+    dspNode.setParamValue("/runningwater/gate", 1);
+    setTimeout(() => dspNode.setParamValue("/runningwater/gate", 0), duration);   
     playAudio();
 }
 
@@ -127,8 +127,8 @@ function playAudio() {
     // them printed on the console of your browser when you load the page)
     // For example if you change to a bell sound, here you could use "/churchBell/gate" instead of
     // "/thunder/rumble".
-    dspNode.setParamValue("/bubble/gate", 1)
-    setTimeout(() => { dspNode.setParamValue("/bubble/gate", 0) }, 100);
+    dspNode.setParamValue("/runningwater/gate", 1)
+    setTimeout(() => { dspNode.setParamValue("/runningwater/gate", 0) }, 100);
 }
 
 //==========================================================================================
