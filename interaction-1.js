@@ -92,6 +92,9 @@ function deviceTurned() {
 function deviceShaken() {
     shaketimer = millis();
     statusLabels[0].style("color", "pink");
+    dspNode.setParamValue("/bubble/gate", pitchValue);
+    dspNode.setParamValue("/bubble/gate", 1);
+    setTimeout(() => dspNode.setParamValue("/bubble/gate", 0), duration);   
     playAudio();
 }
 
